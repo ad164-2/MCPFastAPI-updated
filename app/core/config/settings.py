@@ -61,7 +61,7 @@ class Settings(BaseSettings):
     cors_headers: list = ["*"]
 
     # Excluded routes from authentication
-    auth_excluded_routes: list = ["/health", "/api/v1/auth/login","/api/v1/chat/ws"]
+    auth_excluded_routes: list = ["/health", "/api/v1/auth/login","/api/v1/chat/ws","/docs","/openapi.json","/api/v1/auth/register"]
 
     class Config:
         env_file = ".env"
