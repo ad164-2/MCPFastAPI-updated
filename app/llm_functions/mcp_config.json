@@ -1,0 +1,15 @@
+{
+  "current_date": {
+    "command": "python",
+    "args": ["./app/llm_functions/tools/current_date.py"],
+    "transport": "stdio",
+    "env": {}
+  },
+  "google_search": {
+    "command": "python",
+    "args": ["./app/llm_functions/tools/google_search.py"],
+    "transport": "stdio",
+    "env": {
+    }
+  }
+}
