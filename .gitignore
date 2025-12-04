@@ -4,4 +4,4 @@ __pycache__
 logs/
 uploads
 uv.lock
-my_database.db
+.my_database.db

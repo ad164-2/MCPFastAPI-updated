@@ -28,6 +28,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
         Returns:
             Response
         """
+        # Allow OPTIONS requests (CORS preflight) to pass through without authentication
+        if request.method == "OPTIONS":
+            return await call_next(request)
+        
         # Check if route is excluded from authentication
         path = request.url.path
         if self._is_excluded_route(path):
