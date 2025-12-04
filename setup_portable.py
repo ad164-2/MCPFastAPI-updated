@@ -88,43 +88,18 @@ class ProjectRestorer:
         self.errors = 0
 
     def restore(self):
-        print("=" * 70)
-        print("🚀 Restoring Project Structure and Content")
-        print("=" * 70)
-        print()
-
         for file_path_str, content in FILE_CONTENTS.items():
             self.create_file(file_path_str, content)
-            
-        print()
-        print("=" * 70)
-        print(f"✅ Restoration completed!")
-        print(f"   📊 Created/Overwritten: {self.created_files} files")
-        print(f"   ✗ Errors: {self.errors}")
-        print("=" * 70)
-        print()
-        print("📝 Next steps:")
-        print("   1. Create virtual environment: python -m venv .venv")
-        print("   2. Install dependencies: pip install -r requirements.txt")
-        print("   3. Run the application")
 
     def create_file(self, file_path_str, content):
         try:
-            # Handle path separators for the current OS
             file_path = self.base_path / Path(file_path_str)
-            
-            # Create parent directories
             file_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Write content
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(content)
-                
-            print(f"  ✓ Wrote: {file_path}")
             self.created_files += 1
             
         except Exception as e:
-            print(f"  ✗ Error writing {file_path_str}: {e}")
             self.errors += 1
 
 def main():
@@ -132,7 +107,6 @@ def main():
     parser = argparse.ArgumentParser(description="Restore project files.")
     parser.add_argument("--path", default=".", help="Target directory (default: current)")
     args = parser.parse_args()
-    
     restorer = ProjectRestorer(args.path)
     restorer.restore()
 
