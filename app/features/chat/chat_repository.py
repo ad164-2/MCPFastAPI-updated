@@ -142,14 +142,14 @@ class ChatRepository(BaseRepository[ChatMessage]):
                 db = self._get_db()
                 recent_messages = db.query(ChatMessage)\
                     .filter(ChatMessage.chat_id == chat_id)\
-                    .order_by(ChatMessage.created_at.asc())\
+                    .order_by(ChatMessage.created_at.desc())\
                     .limit(20)\
                     .all()
                 
                 # 3. Convert DB messages to LangChain message format
                 history = []
                 for msg in recent_messages[:-1]:  # Exclude the just-saved user message
-                    if msg.message_type == "user":
+                    if msg.message_type == "human":
                         history.append(HumanMessage(content=msg.content))
                     elif msg.message_type == "bot":
                         history.append(AIMessage(content=msg.content))
