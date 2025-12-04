@@ -37,7 +37,7 @@ dependencies = [
     "bcrypt>=5.0.0",
     "langchain-google-genai",
     "langchain-openai",
-    "langchain_mcp_adapters"
+    "langchain_mcp_adapters",
 ]
 
 [project.optional-dependencies]
@@ -48,4 +48,5 @@ dev = [
     "flake8==6.1.0",
     "mypy==1.7.0",
     "isort==5.13.2",
+    "pytest-cov"
 ]
