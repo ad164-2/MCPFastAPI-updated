@@ -1,22 +1,17 @@
 from enum import Enum
-import os
 import httpx
-from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from openai import OpenAI  # Standard client for Audio/Whisper
+from openai import OpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-
-# Load variables
-load_dotenv()
+from app.core.config import settings
 
 # Global Configuration
-BASE_URL = os.getenv("API_ENDPOINT")
-API_KEY = os.getenv("API_KEY")
+# We use settings for configuration, but keep the HTTP client global for reuse
 HTTP_CLIENT = httpx.Client(verify=False)
 
 class ModelCapability(Enum):
     BASIC = "basic"           # For simple queries, summaries
-    MODERATE="moderate"
+    MODERATE = "moderate"
     REASONING = "reasoning"   # For complex logic, math (DeepSeek R1)
     VISION = "vision"         # For image analysis
     HIGH_PERF = "high_perf"   # For code gen, complex nuance
@@ -24,23 +19,23 @@ class ModelCapability(Enum):
     AUDIO = "audio"           # For Speech-to-text
 
 def get_model_name(capability: ModelCapability):
-    """Maps capability to the specific model string from .env"""
+    """Maps capability to the specific model string from settings"""
     mapping = {
-        ModelCapability.BASIC: os.getenv("MODEL_CHAT_BASIC"),
-        ModelCapability.MODERATE:os.getenv("MODEL_CHAT_MOD"),
-        ModelCapability.HIGH_PERF: os.getenv("MODEL_CHAT_OPEN"), # or DeepSeek-V3
-        ModelCapability.REASONING: os.getenv("MODEL_REASONING"),
-        ModelCapability.VISION: os.getenv("MODEL_VISION"),
-        ModelCapability.EMBEDDING: os.getenv("MODEL_EMBEDDING"),
-        ModelCapability.AUDIO: os.getenv("MODEL_AUDIO"),
+        ModelCapability.BASIC: settings.MODEL_CHAT_BASIC,
+        ModelCapability.MODERATE: settings.MODEL_CHAT_MOD,
+        ModelCapability.HIGH_PERF: settings.MODEL_CHAT_OPEN,
+        ModelCapability.REASONING: settings.MODEL_REASONING,
+        ModelCapability.VISION: settings.MODEL_VISION,
+        ModelCapability.EMBEDDING: settings.MODEL_EMBEDDING,
+        ModelCapability.AUDIO: settings.MODEL_AUDIO,
     }
     return mapping.get(capability)
 
 def get_chat_llm(capability: ModelCapability = ModelCapability.BASIC, temperature: float = 0.7):
     """
-    Returns a ChatOpenAI instance for Text, Vision, or Reasoning models.
+    Returns a Chat Model instance (OpenAI or Google) based on configuration.
     """
-    from app.core.utils import trace_llm_operation, add_span_attributes
+    from app.core.utils import trace_llm_operation
     
     model_name = get_model_name(capability)
     
@@ -51,33 +46,32 @@ def get_chat_llm(capability: ModelCapability = ModelCapability.BASIC, temperatur
     # DeepSeek R1 (Reasoning) usually benefits from lower temperature
     if capability == ModelCapability.REASONING:
         temperature = 0.1
-
-    print(f"Initializing Chat Model: {model_name}")
     
     # Trace model initialization
     with trace_llm_operation(
         "llm.model.initialize",
         attributes={
-            "llm.model": model_name or "gemini-2.5-flash",
+            "llm.model": model_name or "default",
             "llm.capability": capability.value,
             "llm.temperature": temperature,
-            "llm.provider": "google-genai"
+            "llm.provider": "ChatOpenAI"
         }
     ):
-        # return ChatOpenAI(
-        #     base_url=BASE_URL,
-        #     model=model_name,
-        #     api_key=API_KEY,
-        #     http_client=HTTP_CLIENT,
-        #     temperature=temperature
-        # )
 
-        return ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
-            google_api_key='',
-            temperature=0.7,
-            convert_system_message_to_human=True  # Required for Gemini models
-        )
+            return ChatGoogleGenerativeAI(
+                model=model_name or "gemini-2.5-flash",
+                google_api_key="AIzaSyCsoSAR3jkfvp-SaS3Ok5UDmh2AiCrfusg",
+                temperature=temperature,
+                convert_system_message_to_human=True
+            )
+            # Default to OpenAI-compatible (works for OpenAI, DeepSeek, etc.)
+            # return ChatOpenAI(
+            #     base_url=settings.API_ENDPOINT,
+            #     model=model_name or settings.default_model,
+            #     api_key=settings.API_KEY,
+            #     http_client=HTTP_CLIENT,
+            #     temperature=temperature
+            # )
 
 def get_embeddings():
     """
@@ -87,9 +81,9 @@ def get_embeddings():
     print(f"Initializing Embeddings: {model_name}")
     
     return OpenAIEmbeddings(
-        base_url=BASE_URL,
-        model=model_name,
-        api_key=API_KEY,
+        base_url=settings.API_ENDPOINT,
+        model=model_name or settings.embedding_model,
+        api_key=settings.API_KEY,
         http_client=HTTP_CLIENT
     )
 
@@ -100,8 +94,7 @@ def get_audio_client():
     """
     print(f"Initializing Audio Client")
     return OpenAI(
-        base_url=BASE_URL,
-        api_key=API_KEY,
+        base_url=settings.API_ENDPOINT,
+        api_key=settings.API_KEY,
         http_client=HTTP_CLIENT
-
     )

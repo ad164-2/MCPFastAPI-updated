@@ -22,21 +22,26 @@ class Settings(BaseSettings):
     api_description: str = "FastAPI Chat Application with Agent Pipeline"
 
     # Database settings
-    database_url: str = "sqlite:///./my_database.db"
+    database_url: str = ""
     echo_sql: bool = False
 
     # LLM settings
-    openai_api_key: Optional[str] = None
-    anthropic_api_key: Optional[str] = None
-    default_llm_provider: str = "openai"  # openai or anthropic
-    default_model: str = "gpt-3.5-turbo"
+    API_ENDPOINT: str = ""
+    API_KEY: str = ""
+    MODEL_CHAT_BASIC: str = ""
+    MODEL_CHAT_MOD: str = ""
+    MODEL_CHAT_OPEN: str = ""
+    MODEL_REASONING: str = ""
+    MODEL_VISION: str = ""
+    MODEL_EMBEDDING: str = ""
+    MODEL_AUDIO: str = ""
 
     # Embedding settings
     embedding_provider: str = "openai"
     embedding_model: str = "text-embedding-3-small"
 
     # Authentication settings
-    secret_key: str = "your-secret-key-change-in-production"
+    secret_key: str = ""
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 

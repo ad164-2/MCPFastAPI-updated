@@ -13,6 +13,7 @@ from app.features import (
     auth_router,
     users_router,
     chat_router,
+    documents_router,
 )
 from app.core.utils import get_logger
 
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix=settings.api_prefix)
     app.include_router(users_router, prefix=settings.api_prefix)
     app.include_router(chat_router, prefix=settings.api_prefix)
+    app.include_router(documents_router, prefix=settings.api_prefix)
 
     logger.info("FastAPI application created successfully")
     return app

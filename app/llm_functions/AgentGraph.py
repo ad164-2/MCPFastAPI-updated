@@ -91,7 +91,7 @@ async def synthesize_response_agent(state: AgentState) -> dict:
             concise, and helpful response to the user's query. 
             Keep the response professional and informative.
             
-            If you need to access current date/time or database information, you need to use available tools."""
+            If you need to access current date/time or database information, you can use available tools."""
         )
         
         synthesis_messages = [synthesis_prompt] + messages
@@ -139,37 +139,6 @@ async def reject_query(state: AgentState) -> dict:
         })
         
         return {"messages": state["messages"] + [reject_message]}
-
-
-# async def execute_mcp_tool(tool_name: str, **kwargs) -> dict:
-#     """
-#     Helper function to execute MCP tools
-    
-#     Args:
-#         tool_name: Name of the tool to execute
-#         **kwargs: Tool arguments
-        
-#     Returns:
-#         Tool execution result
-#     """
-#     try:
-#         tool_manager = get_tool_manager()
-#         result = await tool_manager.execute_tool(tool_name, **kwargs)
-#         return {
-#             "tool": tool_name,
-#             "success": result.success,
-#             "data": result.data,
-#             "error": result.error
-#         }
-#     except Exception as e:
-#         logger.error(f"Error executing MCP tool '{tool_name}': {str(e)}")
-#         return {
-#             "tool": tool_name,
-#             "success": False,
-#             "data": None,
-#             "error": str(e)
-#         }
-
 
 # Build the workflow
 workflow = StateGraph(AgentState)
