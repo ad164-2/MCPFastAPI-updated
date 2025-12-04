@@ -76,7 +76,7 @@ class Settings(BaseSettings):
     enable_pii_redaction: bool = False  # Set to True in production
     observability_sample_rate: float = 1.0  # 1.0 = 100% of requests
     phoenix_collector_endpoint: str = "http://localhost:6006"
-
+    SERPER_API_KEY:str=""
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

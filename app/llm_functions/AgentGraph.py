@@ -13,7 +13,7 @@ from app.llm_functions.AgentState import AgentState
 from app.llm_functions.AgentLLM import get_base_llm, get_reasoning_llm
 from app.core.utils import get_logger, trace_llm_operation, add_span_attributes
 from app.llm_functions.MCPHelper import GetMCPConfig,InvokeLLMWithMCP
-
+from app.llm_functions.ToolHelper import InvokeLLMWithTool
 logger = get_logger(__name__)
 
 
@@ -103,9 +103,12 @@ async def synthesize_response_agent(state: AgentState) -> dict:
             "agent.has_mcp_tools": True
         })
         
-        response =await InvokeLLMWithMCP(llm,llmcallinput,mcpConfig)
-        if  isinstance(response,list):
-            response=response[0]['text']
+        #if using MCP
+        # response =await InvokeLLMWithMCP(llm,llmcallinput,mcpConfig)
+        # if  isinstance(response,list):
+        #     response=response[0]['text']
+
+        response= await InvokeLLMWithTool(llm,messages,['CurrentDate','Search'])
 
         #response = get_base_llm().invoke(synthesis_messages).content.strip()
         logger.info(f"Generated response: {response}")
