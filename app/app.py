@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.database import init_db, close_db
+from app.core.config.observability_config import initialize_observability, shutdown_observability
 from app.middleware import AuthMiddleware
 from app.features import (
     auth_router,
@@ -23,12 +24,22 @@ async def lifespan(app: FastAPI):
     """Application lifespan context manager."""
     # Startup
     logger.info(f"Starting {settings.app_name}")
+    
+    # Initialize database
     init_db()
+    
+    # Initialize observability (Phoenix + OpenTelemetry)
+    initialize_observability()
 
     yield
 
     # Shutdown
     logger.info(f"Shutting down {settings.app_name}")
+    
+    # Shutdown observability
+    shutdown_observability()
+    
+    # Close database
     close_db()
 
 

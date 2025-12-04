@@ -11,6 +11,13 @@ from .exceptions import (
     AgentException,
     NotFoundException,
 )
+from .observability import (
+    trace_llm_operation,
+    trace_llm_call,
+    add_span_attributes,
+    record_llm_metrics,
+    obs_manager,
+)
 
 __all__ = [
     "get_logger",
@@ -20,4 +27,9 @@ __all__ = [
     "LLMException",
     "AgentException",
     "NotFoundException",
+    "trace_llm_operation",
+    "trace_llm_call",
+    "add_span_attributes",
+    "record_llm_metrics",
+    "obs_manager",
 ]

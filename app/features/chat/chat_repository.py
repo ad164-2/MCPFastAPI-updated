@@ -117,30 +117,62 @@ class ChatRepository(BaseRepository[ChatMessage]):
         2. Call LLM
         3. Save and return bot response
         """
-        # 1. Save user message
-        self.save_message(chat_id, user_id, "user", content)
+        from app.core.utils import trace_llm_operation, add_span_attributes
         
-        try:
-            # 2. Call LLM (Agent Graph)
-            # We might want to pass history here in the future
-            bot_response_text = await CallAgentGraph(content)
+        with trace_llm_operation(
+            "chat.process_message",
+            attributes={
+                "chat.id": chat_id,
+                "chat.user_id": user_id,
+                "chat.message_length": len(content)
+            }
+        ):
+            # 1. Save user message
+            self.save_message(chat_id, user_id, "user", content)
             
-            # 3. Save bot response
-            bot_message = self.save_message(
-                chat_id, 
-                user_id, 
-                "bot", 
-                bot_response_text
-            )
-            return bot_message
+            add_span_attributes({
+                "chat.step": "user_message_saved"
+            })
             
-        except Exception as e:
-            logger.error(f"Error in bot processing: {str(e)}", exc_info=True)
-            # Save error message
-            error_msg = self.save_message(
-                chat_id,
-                user_id,
-                "error",
-                f"I encountered an error: {str(e)}"
-            )
-            return error_msg
+            try:
+                # 2. Call LLM (Agent Graph)
+                # We might want to pass history here in the future
+                bot_response_text = await CallAgentGraph(content)
+                
+                add_span_attributes({
+                    "chat.bot_response_length": len(bot_response_text),
+                    "chat.step": "llm_response_received"
+                })
+                
+                # 3. Save bot response
+                bot_message = self.save_message(
+                    chat_id, 
+                    user_id, 
+                    "bot", 
+                    bot_response_text
+                )
+                
+                add_span_attributes({
+                    "chat.step": "bot_message_saved",
+                    "chat.status": "success"
+                })
+                
+                return bot_message
+                
+            except Exception as e:
+                logger.error(f"Error in bot processing: {str(e)}", exc_info=True)
+                
+                add_span_attributes({
+                    "chat.step": "error",
+                    "chat.status": "error",
+                    "chat.error": str(e)
+                })
+                
+                # Save error message
+                error_msg = self.save_message(
+                    chat_id,
+                    user_id,
+                    "error",
+                    f"I encountered an error: {str(e)}"
+                )
+                return error_msg

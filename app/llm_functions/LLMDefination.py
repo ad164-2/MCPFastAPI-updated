@@ -40,6 +40,8 @@ def get_chat_llm(capability: ModelCapability = ModelCapability.BASIC, temperatur
     """
     Returns a ChatOpenAI instance for Text, Vision, or Reasoning models.
     """
+    from app.core.utils import trace_llm_operation, add_span_attributes
+    
     model_name = get_model_name(capability)
     
     # Validation: Ensure we don't pass Embedding/Audio models to the Chat client
@@ -52,20 +54,30 @@ def get_chat_llm(capability: ModelCapability = ModelCapability.BASIC, temperatur
 
     print(f"Initializing Chat Model: {model_name}")
     
-    # return ChatOpenAI(
-    #     base_url=BASE_URL,
-    #     model=model_name,
-    #     api_key=API_KEY,
-    #     http_client=HTTP_CLIENT,
-    #     temperature=temperature
-    # )
+    # Trace model initialization
+    with trace_llm_operation(
+        "llm.model.initialize",
+        attributes={
+            "llm.model": model_name or "gemini-2.5-flash",
+            "llm.capability": capability.value,
+            "llm.temperature": temperature,
+            "llm.provider": "google-genai"
+        }
+    ):
+        # return ChatOpenAI(
+        #     base_url=BASE_URL,
+        #     model=model_name,
+        #     api_key=API_KEY,
+        #     http_client=HTTP_CLIENT,
+        #     temperature=temperature
+        # )
 
-    return ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key='',
-        temperature=0.7,
-        convert_system_message_to_human=True  # Required for Gemini models
-    )
+        return ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash",
+            google_api_key='',
+            temperature=0.7,
+            convert_system_message_to_human=True  # Required for Gemini models
+        )
 
 def get_embeddings():
     """

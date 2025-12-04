@@ -61,7 +61,16 @@ class Settings(BaseSettings):
     cors_headers: list = ["*"]
 
     # Excluded routes from authentication
-    auth_excluded_routes: list = ["/health", "/api/v1/auth/login","/api/v1/chat/ws","/docs","/openapi.json","/api/v1/auth/register"]
+    auth_excluded_routes: list = ["/health", "/api/v1/auth/login","/api/v1/chat/ws"]
+
+    # Observability settings
+    enable_observability: bool = True
+    phoenix_host: str = "localhost"
+    phoenix_port: int = 6006
+    trace_retention_days: int = 7
+    enable_pii_redaction: bool = False  # Set to True in production
+    observability_sample_rate: float = 1.0  # 1.0 = 100% of requests
+    phoenix_collector_endpoint: str = "http://localhost:6006"
 
     class Config:
         env_file = ".env"
