@@ -38,6 +38,12 @@ dependencies = [
     "langchain-google-genai",
     "langchain-openai",
     "langchain_mcp_adapters",
+    # Observability dependencies
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-instrumentation>=0.41b0",
+    "traceloop-sdk>=0.15.0",
+    "arize-phoenix>=4.0.0",
 ]
 
 [project.optional-dependencies]
