@@ -60,7 +60,7 @@ def get_chat_llm(capability: ModelCapability = ModelCapability.BASIC, temperatur
 
             return ChatGoogleGenerativeAI(
                 model=model_name or "gemini-2.5-flash",
-                google_api_key="",
+                google_api_key="AIzaSyDHOJb4NSUGSYCzBp9WcVSFfb-Uh-Y7Ook",
                 temperature=temperature,
                 convert_system_message_to_human=True
             )

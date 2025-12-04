@@ -114,10 +114,13 @@ class ChatRepository(BaseRepository[ChatMessage]):
         """
         Process a user message:
         1. Save user message
-        2. Call LLM
-        3. Save and return bot response
+        2. Retrieve chat history
+        3. Convert to LangChain messages
+        4. Call LLM with history and chat_id
+        5. Save and return bot response
         """
         from app.core.utils import trace_llm_operation, add_span_attributes
+        from langchain_core.messages import HumanMessage, AIMessage
         
         with trace_llm_operation(
             "chat.process_message",
@@ -135,16 +138,41 @@ class ChatRepository(BaseRepository[ChatMessage]):
             })
             
             try:
-                # 2. Call LLM (Agent Graph)
-                # We might want to pass history here in the future
-                bot_response_text = await CallAgentGraph(content)
+                # 2. Retrieve recent chat history (last 20 messages for context)
+                db = self._get_db()
+                recent_messages = db.query(ChatMessage)\
+                    .filter(ChatMessage.chat_id == chat_id)\
+                    .order_by(ChatMessage.created_at.asc())\
+                    .limit(20)\
+                    .all()
+                
+                # 3. Convert DB messages to LangChain message format
+                history = []
+                for msg in recent_messages[:-1]:  # Exclude the just-saved user message
+                    if msg.message_type == "user":
+                        history.append(HumanMessage(content=msg.content))
+                    elif msg.message_type == "bot":
+                        history.append(AIMessage(content=msg.content))
+                    # Skip error messages in history
+                
+                add_span_attributes({
+                    "chat.step": "history_retrieved",
+                    "chat.history_size": len(history)
+                })
+                
+                # 4. Call LLM (Agent Graph) with chat_id and history
+                bot_response_text = await CallAgentGraph(
+                    query=content,
+                    chat_id=chat_id,
+                    history=history if history else None
+                )
                 
                 add_span_attributes({
                     "chat.bot_response_length": len(bot_response_text),
                     "chat.step": "llm_response_received"
                 })
                 
-                # 3. Save bot response
+                # 5. Save bot response
                 bot_message = self.save_message(
                     chat_id, 
                     user_id, 

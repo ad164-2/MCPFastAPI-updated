@@ -2,14 +2,13 @@
 LLM Call - Functions to call LLM and Agent Graph
 """
 
-from langchain_core.messages import HumanMessage
+from typing import List, Optional
+from langchain_core.messages import HumanMessage, AnyMessage
 from app.llm_functions.LLMDefination import ModelCapability, get_chat_llm
 from app.llm_functions.AgentGraph import agentgraph
 from app.core.utils import get_logger, trace_llm_call, add_span_attributes
 
 logger = get_logger(__name__)
-
-thread_id_1 = "1"
 
 
 @trace_llm_call(operation_name="llm.direct_call", capture_args=True)
@@ -46,27 +45,49 @@ def CallLLM(query: str, capability: ModelCapability = ModelCapability.BASIC, mcp
 
 
 @trace_llm_call(operation_name="llm.agent_graph", capture_args=True)
-async def CallAgentGraph(query: str):
+async def CallAgentGraph(
+    query: str,
+    chat_id: int,
+    history: Optional[List[AnyMessage]] = None
+):
     """
-    Call agent graph with user query.
+    Call agent graph with user query and chat context.
     Processes query through guardrail and synthesis agents.
     
     Args:
         query: User query string
+        chat_id: Unique chat identifier (used as LangGraph thread_id)
+        history: Optional list of previous messages for context
         
     Returns:
         Final response from the agent graph
     """
-    logger.info(f"Calling Agent Graph with query: {query}")
+    logger.info(f"Calling Agent Graph with query: {query}, chat_id: {chat_id}")
     
     # Add query metadata to trace
     add_span_attributes({
         "agent.query_length": len(query),
-        "agent.thread_id": thread_id_1
+        "agent.chat_id": chat_id,
+        "agent.thread_id": str(chat_id),
+        "agent.history_length": len(history) if history else 0
     })
     
-    config = {"configurable": {"thread_id": thread_id_1}}
-    inputs = {"messages": [HumanMessage(content=query)]}
+    # Use chat_id as the unique thread identifier for LangGraph
+    config = {"configurable": {"thread_id": str(chat_id)}}
+    
+    # Build inputs: if history is provided, use it; otherwise start fresh
+    if history:
+        # Append the new query to the existing history
+        inputs = {
+            "chat_id": chat_id,
+            "messages": history + [HumanMessage(content=query)]
+        }
+    else:
+        # Start a new conversation
+        inputs = {
+            "chat_id": chat_id,
+            "messages": [HumanMessage(content=query)]
+        }
     
     try:
         response = await agentgraph.ainvoke(inputs, config=config)
@@ -79,13 +100,12 @@ async def CallAgentGraph(query: str):
             "agent.status": "success"
         })
         
-        logger.info(f"Agent Graph response: {final_response}")
+        logger.info(f"Agent Graph response for chat {chat_id}: {final_response}")
         return final_response
     except Exception as e:
         add_span_attributes({
             "agent.status": "error",
             "agent.error": str(e)
         })
-        logger.error(f"Error in Agent Graph: {str(e)}", exc_info=True)
+        logger.error(f"Error in Agent Graph for chat {chat_id}: {str(e)}", exc_info=True)
         raise
-

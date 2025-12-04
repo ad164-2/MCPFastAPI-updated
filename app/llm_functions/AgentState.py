@@ -8,8 +8,7 @@ import operator
 
 
 class AgentState(TypedDict):
-    """State dictionary for the agent graph."""
+    """State dictionary for the agent graph, scoped per chat session."""
+    chat_id: int  # unique identifier for the chat / LangGraph thread
     messages: Annotated[list[AnyMessage], operator.add]
     guardrail_status: str
-
- 

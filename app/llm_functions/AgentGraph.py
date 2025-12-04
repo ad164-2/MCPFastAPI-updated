@@ -26,10 +26,12 @@ async def guardrail_agent(state: AgentState) -> dict:
         "agent.guardrail",
         attributes={
             "agent.name": "guardrail",
-            "agent.type": "validation"
+            "agent.type": "validation",
+            "agent.chat_id": state.get("chat_id", "unknown")
         }
     ):
-        logger.info("--- Executing Guardrail Agent ---")
+        chat_id = state.get("chat_id", "unknown")
+        logger.info(f"--- Executing Guardrail Agent (chat_id: {chat_id}) ---")
         messages = state["messages"]
         
         guardrail_prompt = SystemMessage(
@@ -80,10 +82,12 @@ async def synthesize_response_agent(state: AgentState) -> dict:
         "agent.synthesize",
         attributes={
             "agent.name": "synthesize",
-            "agent.type": "response_generation"
+            "agent.type": "response_generation",
+            "agent.chat_id": state.get("chat_id", "unknown")
         }
     ):
-        logger.info("--- Executing Synthesize Response Agent ---")
+        chat_id = state.get("chat_id", "unknown")
+        logger.info(f"--- Executing Synthesize Response Agent (chat_id: {chat_id}) ---")
         messages = state["messages"]
         mcpConfig=await GetMCPConfig()
         synthesis_prompt = SystemMessage(
@@ -126,10 +130,12 @@ async def reject_query(state: AgentState) -> dict:
         "agent.reject",
         attributes={
             "agent.name": "reject",
-            "agent.type": "rejection"
+            "agent.type": "rejection",
+            "agent.chat_id": state.get("chat_id", "unknown")
         }
     ):
-        logger.info("--- Rejecting invalid query ---")
+        chat_id = state.get("chat_id", "unknown")
+        logger.info(f"--- Rejecting invalid query (chat_id: {chat_id}) ---")
         reject_message = SystemMessage(
             content="Your query did not pass validation. Please ensure your input is valid and try again."
         )
